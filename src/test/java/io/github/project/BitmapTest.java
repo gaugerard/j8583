@@ -15,6 +15,6 @@ class BitmapTest {
         var bitmap = Bitmap.parse(bitmapToParse);
 
         // Then
-        System.out.println("a");
+        System.out.println("b");
     }
 }
