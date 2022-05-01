@@ -3,6 +3,7 @@ package io.github.project;
 import jakarta.xml.bind.DatatypeConverter;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,20 +43,30 @@ public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti
         final byte[] data = new byte[length];
         final ByteBuffer dataFieldsByteBuffer = ByteBuffer.wrap(data);
 
-        final List<IsoType> isoTypes = getIsoTypesFromBitmap(bitmap);
-        return isoTypes.stream().map(isoType -> readDataFieldFromData(dataFieldsByteBuffer, isoType)).toList();
+        final List<IsoDataField> isoDataFields = getIsoTypesFromBitmap(bitmap);
+        return isoDataFields.stream().map(isoDataField -> readDataFieldFromData(dataFieldsByteBuffer, isoDataField)).toList();
     }
 
-    private List<IsoType> getIsoTypesFromBitmap(final Bitmap bitmap) {
-        return Arrays.stream(IsoType.values()).sorted().filter(isoType -> bitmap.getFields().contains(isoType.getField())).toList();
+    private List<IsoDataField> getIsoTypesFromBitmap(final Bitmap bitmap) {
+        return Arrays.stream(IsoDataField.values()).sorted().filter(isoDataField -> bitmap.getFields().contains(isoDataField.getField())).toList();
     }
 
-    private DataField readDataFieldFromData(final ByteBuffer buffer, final IsoType isoType) {
-        final int length = isoType.getLength();
+    private DataField readDataFieldFromData(final ByteBuffer buffer, final IsoDataField isoDataField) {
+        final int length = isoDataField.getLength();
         final byte[] data = new byte[length];
         final ByteBuffer bitMapByteBuffer = buffer.get(data);
+        final String IsoDataFieldValue =  new String(bitMapByteBuffer.array(), StandardCharsets.UTF_8);
 
-        return new DataField(isoType, bitMapByteBuffer.toString());
+        return new DataField(isoDataField, IsoDataFieldValue);
+    }
+
+    @Override
+    public String toString() {
+        return "J8583Message{" +
+                "bitmap=" + bitmap +
+                "mti=" + mti +
+                ", dataFields=" + dataFields.toString() +
+                '}';
     }
 
     public static class Builder {

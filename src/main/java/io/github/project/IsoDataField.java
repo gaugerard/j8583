@@ -2,7 +2,7 @@ package io.github.project;
 
 import static io.github.project.DataType.NUMERIC;
 
-public enum IsoType {
+public enum IsoDataField {
 
     PRIMARY_ACCOUNT_NUMBER(NUMERIC, 2, 19, true, "PAN"),
     PROCESSING_CODE(NUMERIC, 3, 6, false, "Processing Code");
@@ -13,11 +13,11 @@ public enum IsoType {
     private final boolean sensitive;
     private final String description;
 
-    IsoType(final DataType dataType,
-            final int field,
-            final int length,
-            final boolean sensitive,
-            final String description) {
+    IsoDataField(final DataType dataType,
+                 final int field,
+                 final int length,
+                 final boolean sensitive,
+                 final String description) {
         this.dataType = dataType;
         this.field = field;
         this.length = length;
@@ -43,5 +43,16 @@ public enum IsoType {
 
     public String getDescription() {
         return description;
+    }
+
+    @Override
+    public String toString() {
+        return "IsoDataField{" +
+                "dataType=" + dataType +
+                "field=" + field +
+                "length=" + length +
+                "sensitive=" + sensitive +
+                "description=" + description +
+                '}';
     }
 }
