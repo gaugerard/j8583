@@ -1,38 +1,15 @@
 package io.github.project;
 
+import jakarta.xml.bind.DatatypeConverter;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class J8583Message {
+public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti) {
 
-    private static final int MTI_LENGTH = 4;
-    private static final int BITMAP_LENGTH = 8;
-
-    private final Bitmap bitmap;
-    private final List<DataField> dataFields;
-    private final String mti;
-
-    J8583Message(final Bitmap bitmap,
-                 final List<DataField> dataFields,
-                 final String mti) {
-        this.bitmap = bitmap;
-        this.dataFields = dataFields;
-        this.mti = mti;
-    }
-
-    public Bitmap getBitmap() {
-        return bitmap;
-    }
-
-    public List<DataField> getDataFields() {
-        return dataFields;
-    }
-
-    public String getMti() {
-        return mti;
-    }
+    private static final int MTI_LENGTH = 2;
+    private static final int BITMAP_LENGTH = 4;
 
     public J8583Message parse(final byte[] data) {
         ByteBuffer buffer = ByteBuffer.wrap(data, 0, data.length);
@@ -50,8 +27,8 @@ public class J8583Message {
 
     private String parseMti(final ByteBuffer buffer) {
         final byte[] data = new byte[MTI_LENGTH];
-        final ByteBuffer bitMapByteBuffer = buffer.get(data);
-        return "0100";
+        buffer.get(data);
+        return DatatypeConverter.printHexBinary(data);
     }
 
     private Bitmap parseBitmap(final ByteBuffer buffer) {
@@ -66,11 +43,11 @@ public class J8583Message {
         final ByteBuffer dataFieldsByteBuffer = ByteBuffer.wrap(data);
 
         final List<IsoType> isoTypes = getIsoTypesFromBitmap(bitmap);
-        return isoTypes.stream().map(isoType -> readDataFieldFromData(dataFieldsByteBuffer, isoType)).collect(Collectors.toUnmodifiableList());
+        return isoTypes.stream().map(isoType -> readDataFieldFromData(dataFieldsByteBuffer, isoType)).toList();
     }
 
     private List<IsoType> getIsoTypesFromBitmap(final Bitmap bitmap) {
-        return Arrays.stream(IsoType.values()).sorted().filter(isoType -> bitmap.getFields().contains(isoType.getField())).collect(Collectors.toUnmodifiableList());
+        return Arrays.stream(IsoType.values()).sorted().filter(isoType -> bitmap.getFields().contains(isoType.getField())).toList();
     }
 
     private DataField readDataFieldFromData(final ByteBuffer buffer, final IsoType isoType) {
