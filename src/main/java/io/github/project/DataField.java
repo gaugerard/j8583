@@ -1,12 +1,5 @@
 package io.github.project;
 
-public class DataField {
-    private final IsoType isoType;
-    private final String value;
+public record DataField(IsoType isoType, String value) {
 
-    DataField(final IsoType isoType,
-              final String value) {
-        this.isoType = isoType;
-        this.value = value;
-    }
 }
