@@ -5,7 +5,7 @@ import static io.github.project.DataType.NUMERIC;
 public enum IsoType {
 
     PRIMARY_ACCOUNT_NUMBER(NUMERIC, 2, 19, true, "PAN"),
-    PROCESSING_CODE(NUMERIC, 3, 6, false, "PAN");
+    PROCESSING_CODE(NUMERIC, 3, 6, false, "Processing Code");
 
     private final DataType dataType;
     private final int field;
