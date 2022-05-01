@@ -1,15 +1,13 @@
 package io.github.project;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class Bitmap {
+public record Bitmap(List<Integer> fields) {
 
-    private final List<Integer> fields;
-
-    Bitmap(final List<Integer> fields) {
-        this.fields = fields;
-    }
+    private static final char FIELD_PRESENT = '1';
+    private static final String BYTE_FORMAT = "%8s";
 
     public static Bitmap parse(final byte[] data) {
         final List<Integer> fields = new ArrayList<Integer>();
@@ -17,18 +15,17 @@ public class Bitmap {
             final byte bits = data[index];
             fields.addAll(parse(index, bits));
         }
-        return new Bitmap(fields);
+        return new Bitmap(Collections.unmodifiableList(fields));
     }
 
     private static List<Integer> parse(final int index, final byte bits) {
         // bits = 8 bit
-        final String bitsAsString = Integer.toBinaryString(bits);
-        final String aaa = String.format("%8s", Integer.toBinaryString(bits)).replace(' ', '0');
+        final String bitsAsString = String.format(BYTE_FORMAT, Integer.toBinaryString(bits & 0xff)).replace(' ', '0');
 
-        final List<Integer> fields = new ArrayList<Integer>();
+        final List<Integer> fields = new ArrayList<>();
         for (int i = 0; i < bitsAsString.length(); i++) {
             final char bit = bitsAsString.charAt(i);
-            if (bit == '1') {
+            if (FIELD_PRESENT == bit) {
                 fields.add(computeField(index, i));
             }
         }
@@ -36,7 +33,7 @@ public class Bitmap {
     }
 
     private static Integer computeField(final int byteIndex, final int bitIndex) {
-        return (byteIndex * 8) + bitIndex;
+        return (byteIndex * 8) + (bitIndex + 1);
     }
 
     public List<Integer> getFields() {
