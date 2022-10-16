@@ -1,5 +1,3 @@
 package io.github.project;
 
-public record DataField(IsoType isoType, String value) {
-
-}
+record DataField(IsoDataField isoDataField, String value) {}
