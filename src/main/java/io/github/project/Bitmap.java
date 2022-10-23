@@ -21,7 +21,6 @@ public record Bitmap(List<Integer> fields) {
     private static List<Integer> parse(final int index, final byte bits) {
         // bits = 8 bit
         final String bitsAsString = String.format(BYTE_FORMAT, Integer.toBinaryString(bits & 0xff)).replace(' ', '0');
-
         final List<Integer> fields = new ArrayList<>();
         for (int i = 0; i < bitsAsString.length(); i++) {
             final char bit = bitsAsString.charAt(i);

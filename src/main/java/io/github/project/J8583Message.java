@@ -9,9 +9,8 @@ import java.util.List;
 
 public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti) {
 
-    private static final int MTI_LENGTH = 2;
-    private static final int BITMAP_LENGTH = 4;
-    private static final int FIELD_NAME_LENGTH = 1;
+    private static final int MTI_LENGTH = 4;
+    private static final int BITMAP_LENGTH = 8;
 
     public J8583Message parse(final byte[] data) {
         ByteBuffer buffer = ByteBuffer.wrap(data, 0, data.length);
@@ -30,13 +29,22 @@ public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti
     private String parseMti(final ByteBuffer buffer) {
         final byte[] data = new byte[MTI_LENGTH];
         buffer.get(data);
-        return DatatypeConverter.printHexBinary(data);
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     private Bitmap parseBitmap(final ByteBuffer buffer) {
         final byte[] data = new byte[BITMAP_LENGTH];
         buffer.get(data);
-        return Bitmap.parse(data);
+
+        final String hexBinaryString = new String(data, StandardCharsets.UTF_8);
+        final byte[] dataHexBinaryByteFormat = DatatypeConverter.parseHexBinary(hexBinaryString);
+
+        return Bitmap.parse(dataHexBinaryByteFormat);
+    }
+
+    private static byte[] convertToHexBinaryByteFormat(final byte[] data) {
+        final String hexBinaryString = new String(data, StandardCharsets.UTF_8);
+        return DatatypeConverter.parseHexBinary(hexBinaryString);
     }
 
     private List<DataField> parseDataFields(final ByteBuffer buffer, final Bitmap bitmap) {
@@ -49,21 +57,42 @@ public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti
     }
 
     private DataField readDataFieldFromData(final ByteBuffer buffer, final IsoDataField isoDataField) {
+        return switch (isoDataField.getDataType()) {
+            case ALPHA, NUMERIC, BINARY -> readFixedWidthDataFieldFromData(buffer, isoDataField);
+            case LLVAR -> readVariableWidthDataFieldFromData(buffer, isoDataField);
+        };
+    }
 
-        final int length = isoDataField.getLength();
-
-        final byte[] data = new byte[FIELD_NAME_LENGTH + length];
+    private String convertByteArrayToUTF8String(final ByteBuffer buffer, final int length) {
+        final byte[] data = new byte[length];
         buffer.get(data);
+        return new String(data, StandardCharsets.UTF_8);
+    }
 
-        final byte[] isoDataFieldValue = Arrays.copyOfRange(data, FIELD_NAME_LENGTH, FIELD_NAME_LENGTH + length);
+    private DataField readFixedWidthDataFieldFromData(final ByteBuffer buffer, final IsoDataField isoDataField) {
+        final int length = isoDataField.getLength() * 2;
 
-        final String IsoDataFieldValue = DatatypeConverter.printHexBinary(isoDataFieldValue);
+        final String isoDataFieldValueStr = convertByteArrayToUTF8String(buffer, length);
 
-        return new DataField(isoDataField, IsoDataFieldValue);
+        return new DataField(isoDataField, isoDataFieldValueStr);
+    }
+
+    private DataField readVariableWidthDataFieldFromData(final ByteBuffer buffer, final IsoDataField isoDataField) {
+        final Integer encodedLengthWidth = isoDataField.getDataType().getEncodedLengthWidth();
+        final int length = readEncodedLengthWidthFromData(buffer, encodedLengthWidth);
+
+        final String isoDataFieldValueStr = convertByteArrayToUTF8String(buffer, length);
+
+        return new DataField(isoDataField, isoDataFieldValueStr);
+    }
+
+    private int readEncodedLengthWidthFromData(final ByteBuffer buffer, final Integer length) {
+        final String encodedLengthWidth = convertByteArrayToUTF8String(buffer, length);
+
+        return Integer.parseInt(encodedLengthWidth);
     }
 
     public static class Builder {
-
         private Bitmap bitmap;
         private List<DataField> dataFields;
         private String mti;

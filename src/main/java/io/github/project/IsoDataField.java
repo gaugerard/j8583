@@ -1,11 +1,12 @@
 package io.github.project;
 
-import static io.github.project.DataType.NUMERIC;
+import static io.github.project.DataType.*;
 
 enum IsoDataField {
 
     PRIMARY_ACCOUNT_NUMBER(NUMERIC, 2, 19, true, "PAN"),
-    PROCESSING_CODE(NUMERIC, 3, 6, false, "Processing Code");
+    PROCESSING_CODE(NUMERIC, 3, 6, false, "Processing Code"),
+    RESERVED(LLVAR, 32, 99, false, "Reserved");
 
     private final DataType dataType;
     private final int field;
