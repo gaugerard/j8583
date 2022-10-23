@@ -42,11 +42,6 @@ public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti
         return Bitmap.parse(dataHexBinaryByteFormat);
     }
 
-    private static byte[] convertToHexBinaryByteFormat(final byte[] data) {
-        final String hexBinaryString = new String(data, StandardCharsets.UTF_8);
-        return DatatypeConverter.parseHexBinary(hexBinaryString);
-    }
-
     private List<DataField> parseDataFields(final ByteBuffer buffer, final Bitmap bitmap) {
         final List<IsoDataField> isoDataFields = getIsoTypesFromBitmap(bitmap);
         return isoDataFields.stream().map(isoDataField -> readDataFieldFromData(buffer, isoDataField)).toList();
@@ -70,7 +65,7 @@ public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti
     }
 
     private DataField readFixedWidthDataFieldFromData(final ByteBuffer buffer, final IsoDataField isoDataField) {
-        final int length = isoDataField.getLength() * 2;
+        final int length = isoDataField.getLength();
 
         final String isoDataFieldValueStr = convertByteArrayToUTF8String(buffer, length);
 
@@ -90,6 +85,28 @@ public record J8583Message(Bitmap bitmap, List<DataField> dataFields, String mti
         final String encodedLengthWidth = convertByteArrayToUTF8String(buffer, length);
 
         return Integer.parseInt(encodedLengthWidth);
+    }
+
+    public byte[] toByteArray() {
+        final byte[] mti = this.mti.getBytes(StandardCharsets.UTF_8);
+        final byte[] bitmap = this.bitmap.toByteArray();
+
+        final List<byte[]> dataFieldsBytes = this.dataFields.stream().map(DataField::toByteArray).toList();
+        final int dataFieldsBytesLength = dataFieldsBytes.stream().map(bytes -> bytes.length).reduce(0, Integer::sum);
+        final ByteBuffer byteBufferDataFields = ByteBuffer.wrap(new byte[dataFieldsBytesLength]);
+
+        for (byte[] FieldsBytes : dataFieldsBytes) {
+            byteBufferDataFields.put(FieldsBytes);
+        }
+        final byte[] dataFields = byteBufferDataFields.array();
+
+        final byte[] combined = new byte[mti.length + bitmap.length + dataFields.length];
+        final ByteBuffer byteBuffer = ByteBuffer.wrap(combined);
+        byteBuffer.put(mti);
+        byteBuffer.put(bitmap);
+        byteBuffer.put(dataFields);
+
+        return byteBuffer.array();
     }
 
     public static class Builder {

@@ -30,7 +30,7 @@ class J8583MessageTest {
     void shouldParse() {
         // Given
         var j8583Message = new J8583Message.Builder().build();
-        var inputString = "1200" + "40000000" + "1".repeat(38);
+        var inputString = "1200" + "40000000" + "1".repeat(19);
         var messageToParse = inputString.getBytes(StandardCharsets.UTF_8);
 
         // When
@@ -38,7 +38,23 @@ class J8583MessageTest {
 
         // Then
         var expectedJ8583Message = new J8583Message.Builder().mti("1200").bitmap(new Bitmap(List.of(2)))
-                .dataFields(Collections.singletonList(new DataField(IsoDataField.PRIMARY_ACCOUNT_NUMBER, "1".repeat(38)))).build();
+                .dataFields(Collections.singletonList(new DataField(IsoDataField.PRIMARY_ACCOUNT_NUMBER, "1".repeat(19)))).build();
+        assertThat(actualJ8583Message, equalTo(expectedJ8583Message));
+    }
+
+    @Test
+    void shouldParseBinary() {
+        // Given
+        var j8583Message = new J8583Message.Builder().build();
+        var inputString = "1200" + "08000000" + "50484851";
+        var messageToParse = inputString.getBytes(StandardCharsets.UTF_8);
+
+        // When
+        var actualJ8583Message = j8583Message.parse(messageToParse);
+
+        // Then
+        var expectedJ8583Message = new J8583Message.Builder().mti("1200").bitmap(new Bitmap(List.of(5)))
+                .dataFields(Collections.singletonList(new DataField(IsoDataField.BINARY_CODE, "50484851"))).build();
         assertThat(actualJ8583Message, equalTo(expectedJ8583Message));
     }
 
@@ -46,7 +62,7 @@ class J8583MessageTest {
     void shouldParseWith2Fields() {
         // Given
         var j8583Message = new J8583Message.Builder().build();
-        var inputString = "1200" + "60000000" + "1".repeat(38) + "2".repeat(12);
+        var inputString = "1200" + "60000000" + "1".repeat(19) + "2".repeat(12);
         var messageToParse = inputString.getBytes(StandardCharsets.UTF_8);
 
         // When
@@ -55,8 +71,8 @@ class J8583MessageTest {
         // Then
         var expectedJ8583Message = new J8583Message.Builder().mti("1200").bitmap(new Bitmap(List.of(2, 3)))
                 .dataFields(List.of(
-                                new DataField(IsoDataField.PRIMARY_ACCOUNT_NUMBER, "1".repeat(38)),
-                                new DataField(IsoDataField.PROCESSING_CODE, "2".repeat(12))
+                                new DataField(IsoDataField.PRIMARY_ACCOUNT_NUMBER, "1".repeat(19)),
+                                new DataField(IsoDataField.PROCESSING_CODE, "2".repeat(6))
                         )
                 )
                 .build();
