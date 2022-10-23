@@ -1,11 +1,13 @@
 package io.github.project;
 
-import static io.github.project.DataType.NUMERIC;
+import static io.github.project.DataType.*;
 
-enum IsoDataField {
+public enum IsoDataField {
 
     PRIMARY_ACCOUNT_NUMBER(NUMERIC, 2, 19, true, "PAN"),
-    PROCESSING_CODE(NUMERIC, 3, 6, false, "Processing Code");
+    PROCESSING_CODE(NUMERIC, 3, 6, false, "Processing Code"),
+    BINARY_CODE(BINARY, 5, 8, false, "Binary Test Code"),
+    RESERVED(LLVAR, 32, 99, false, "Reserved");
 
     private final DataType dataType;
     private final int field;
@@ -43,6 +45,10 @@ enum IsoDataField {
 
     public String getDescription() {
         return description;
+    }
+
+    public byte[] writeValueToByteArray(final String value){
+        return dataType.writeValueToByteArray(value);
     }
 
     @Override
